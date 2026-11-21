@@ -1,0 +1,111 @@
+@import "tailwindcss";
+@import "leaflet/dist/leaflet.css";
+
+@layer base {
+  :root {
+    --font-sans: "IBM Plex Sans Arabic", system-ui, -apple-system, sans-serif;
+    --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, monospace;
+  }
+
+  html,
+  body {
+    font-family: var(--font-sans);
+    background-color: #f5f7f5;
+    color: #0f1f18;
+  }
+
+  .font-mono-nums {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* Ensure Leaflet map tiles and interactive overlays respect RTL workspace stacking */
+.leaflet-container {
+  font-family: var(--font-sans);
+  background: #1a241e;
+}
+
+.leaflet-control-attribution {
+  font-size: 10px;
+  direction: ltr;
+}
+
+.leaflet-tooltip.ghars-sensor-tooltip {
+  background: rgba(15, 31, 24, 0.96);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 10px;
+  color: #ffffff;
+  padding: 8px 10px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.35);
+  font-family: var(--font-sans);
+  direction: rtl;
+  text-align: right;
+  pointer-events: none;
+}
+
+.leaflet-tooltip.ghars-sensor-tooltip::before {
+  border-top-color: rgba(15, 31, 24, 0.96);
+}
+
+@keyframes ghars-sensor-pulse {
+  0% {
+    transform: scale(0.95);
+    opacity: 0.78;
+  }
+  70% {
+    transform: scale(1.85);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1.85);
+    opacity: 0;
+  }
+}
+
+.ghars-sensor-pulse {
+  animation: ghars-sensor-pulse 1.8s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+}
+
+@keyframes ghars-signal-wave {
+  0%,
+  100% {
+    opacity: 0.28;
+    transform: translateY(1px) scale(0.94);
+  }
+  45% {
+    opacity: 1;
+    transform: translateY(-1px) scale(1.04);
+  }
+}
+
+.ghars-signal-arc-1 {
+  transform-box: fill-box;
+  transform-origin: center bottom;
+  animation: ghars-signal-wave 1.6s ease-in-out infinite;
+}
+
+.ghars-signal-arc-2 {
+  transform-box: fill-box;
+  transform-origin: center bottom;
+  animation: ghars-signal-wave 1.6s ease-in-out 0.35s infinite;
+}
+
+@keyframes ghars-live-ring {
+  0% {
+    transform: scale(0.9);
+    opacity: 0.85;
+  }
+  75% {
+    transform: scale(2.1);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(2.1);
+    opacity: 0;
+  }
+}
+
+.ghars-live-ring {
+  animation: ghars-live-ring 1.8s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+}

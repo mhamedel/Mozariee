@@ -1,0 +1,6 @@
+{
+  "name": "غرس — محرّر الخرائط والحقول الزراعية",
+  "description": "منصة غرس للمراقبة الزراعية: محرّر خرائط وحقول تفاعلي بالسحب والإفلات لربط المزارع والمناطق والحساسات.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,172 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerified() {
+      return request.auth.token.email_verified == true;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && isVerified() && request.auth.uid == userId;
+    }
+
+    function isValidUserAccount(data, userId) {
+      return data.keys().hasAll([
+        'uid',
+        'email',
+        'displayName',
+        'photoURL',
+        'providerId',
+        'emailVerified',
+        'organization',
+        'createdAt',
+        'lastLoginAt',
+        'updatedAt'
+      ]) &&
+      data.keys().hasOnly([
+        'uid',
+        'email',
+        'displayName',
+        'photoURL',
+        'providerId',
+        'emailVerified',
+        'organization',
+        'createdAt',
+        'lastLoginAt',
+        'updatedAt'
+      ]) &&
+      data.uid is string &&
+      data.uid.size() > 0 &&
+      data.uid.size() <= 128 &&
+      data.uid.matches('^[a-zA-Z0-9_\\-]+$') &&
+      data.uid == request.auth.uid &&
+      data.uid == userId &&
+      data.email is string &&
+      data.email.size() <= 254 &&
+      data.displayName is string &&
+      data.displayName.size() <= 120 &&
+      data.photoURL is string &&
+      data.photoURL.size() <= 512 &&
+      data.providerId is string &&
+      data.providerId.size() <= 64 &&
+      data.emailVerified is bool &&
+      data.organization is string &&
+      data.organization.size() <= 120 &&
+      data.createdAt is timestamp &&
+      data.lastLoginAt is timestamp &&
+      data.updatedAt is timestamp;
+    }
+
+    function isValidLoginSession(data, userId) {
+      return data.keys().hasAll([
+        'uid',
+        'email',
+        'providerId',
+        'deviceSummary',
+        'signedInAt'
+      ]) &&
+      data.keys().hasOnly([
+        'uid',
+        'email',
+        'providerId',
+        'deviceSummary',
+        'signedInAt'
+      ]) &&
+      data.uid is string &&
+      data.uid.size() > 0 &&
+      data.uid.size() <= 128 &&
+      data.uid.matches('^[a-zA-Z0-9_\\-]+$') &&
+      data.uid == request.auth.uid &&
+      data.uid == userId &&
+      data.email is string &&
+      data.email.size() <= 254 &&
+      data.providerId is string &&
+      data.providerId.size() <= 64 &&
+      data.deviceSummary is string &&
+      data.deviceSummary.size() <= 180 &&
+      data.signedInAt is timestamp;
+    }
+
+    // Connection validation probe (read-only health check doc)
+    match /test/connection {
+      allow get: if true;
+      allow list, write: if false;
+    }
+
+    match /users/{userId} {
+      allow get: if isValidId(userId) && isOwner(userId);
+      allow list: if false;
+      allow create: if isValidId(userId) &&
+        isOwner(userId) &&
+        isValidUserAccount(incoming(), userId) &&
+        incoming().createdAt == request.time &&
+        incoming().lastLoginAt == request.time &&
+        incoming().updatedAt == request.time;
+      allow update: if isValidId(userId) &&
+        isOwner(userId) &&
+        isValidUserAccount(incoming(), userId) &&
+        incoming().uid == existing().uid &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time && (
+          (
+            incoming().lastLoginAt == request.time &&
+            incoming().diff(existing()).affectedKeys().hasOnly([
+              'email',
+              'displayName',
+              'photoURL',
+              'providerId',
+              'emailVerified',
+              'lastLoginAt',
+              'updatedAt'
+            ])
+          ) ||
+          (
+            incoming().lastLoginAt == existing().lastLoginAt &&
+            incoming().diff(existing()).affectedKeys().hasOnly([
+              'displayName',
+              'organization',
+              'updatedAt'
+            ])
+          )
+        );
+      allow delete: if false;
+
+      match /sessions/{sessionId} {
+        allow get: if isValidId(userId) &&
+          isValidId(sessionId) &&
+          isOwner(userId) &&
+          exists(/databases/$(database)/documents/users/$(userId));
+        allow list: if isValidId(userId) &&
+          isOwner(userId) &&
+          resource.data.uid == request.auth.uid;
+        allow create: if isValidId(userId) &&
+          isValidId(sessionId) &&
+          isOwner(userId) &&
+          exists(/databases/$(database)/documents/users/$(userId)) &&
+          isValidLoginSession(incoming(), userId) &&
+          incoming().signedInAt == request.time;
+        allow update, delete: if false;
+      }
+    }
+  }
+}

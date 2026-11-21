@@ -1,0 +1,129 @@
+{
+  "entities": {
+    "UserAccount": {
+      "title": "UserAccount",
+      "description": "Authenticated user account record and login metadata synchronized from Firebase Auth.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "description": "Firebase Auth user UID.",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "Verified account email address.",
+          "maxLength": 254
+        },
+        "displayName": {
+          "type": "string",
+          "description": "User display name.",
+          "maxLength": 120
+        },
+        "photoURL": {
+          "type": "string",
+          "description": "User profile avatar URL.",
+          "maxLength": 512
+        },
+        "providerId": {
+          "type": "string",
+          "description": "Primary authentication provider identifier.",
+          "maxLength": 64
+        },
+        "emailVerified": {
+          "type": "boolean",
+          "description": "Whether the account email is verified."
+        },
+        "organization": {
+          "type": "string",
+          "description": "Optional agricultural organization or team label.",
+          "maxLength": 120
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when account record was created."
+        },
+        "lastLoginAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of the most recent sign-in."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of the last account profile update."
+        }
+      },
+      "required": [
+        "uid",
+        "email",
+        "displayName",
+        "photoURL",
+        "providerId",
+        "emailVerified",
+        "organization",
+        "createdAt",
+        "lastLoginAt",
+        "updatedAt"
+      ]
+    },
+    "LoginSession": {
+      "title": "LoginSession",
+      "description": "Immutable sign-in event record for the account login info history.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "description": "Firebase Auth user UID owning this session record.",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "Email address used during sign-in.",
+          "maxLength": 254
+        },
+        "providerId": {
+          "type": "string",
+          "description": "Authentication provider identifier.",
+          "maxLength": 64
+        },
+        "deviceSummary": {
+          "type": "string",
+          "description": "Browser and platform summary for the sign-in session.",
+          "maxLength": 180
+        },
+        "signedInAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when the session was recorded."
+        }
+      },
+      "required": [
+        "uid",
+        "email",
+        "providerId",
+        "deviceSummary",
+        "signedInAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": {
+        "$ref": "#/entities/UserAccount"
+      },
+      "description": "Owner-isolated user account login profile and metadata."
+    },
+    "/users/{userId}/sessions/{sessionId}": {
+      "schema": {
+        "$ref": "#/entities/LoginSession"
+      },
+      "description": "Owner-isolated sign-in history entries."
+    }
+  }
+}
